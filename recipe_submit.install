@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function recipe_submit_schema() {
+  $schema['recipe_submit'] = array(
+    'description' => 'Recipe base table.',
+    'fields' => array(
+      'recipe_id' => array(
+        'description' => 'Primary identifier for recipe.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'submitted' => array(
+        'description' => 'The Unix timestamp when the recipe was submitted.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'site_language' => array(
+        'description' => 'The sites language',
+        'type' => 'varchar',
+        'length' => 2,
+      ),
+      'recipe_title' => array(
+        'description' => 'Recipe Title.',
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+      ),
+      'author_name' => array(
+        'description' => 'The author of the recipe.',
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+      ),
+      'author_email' => array(
+        'description' => 'The author email.',
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+      ),
+      'recipe_description' => array(
+        'description' => 'Recipe description.',
+        'type' => 'text',
+      ),
+      'recipe_instructions' => array(
+        'description' => 'Recipe instructions.',
+        'type' => 'text',
+      ),
+      'recipe_ingredients' => array(
+        'description' => 'Recipe ingredients.',
+        'type' => 'text',
+      ),
+    ),
+    'primary key' => array('recipe_id'),
+  );
+
+  return $schema;
+}
+
+function recipe_submit_uninstall() {
+  drupal_uninstall_schema('recipe_submit');
+}

@@ -1,0 +1,149 @@
+<?php
+
+/**
+ *
+ */
+function recipe_submit_menu() {
+  $items = array();
+
+  $items['recipe/add'] = array(
+    'title' => 'Submit a recipe',
+    'description' => 'A form to submit a recipe',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('recipe_submit_form'),
+    'access arguments' => array('add_recipe'),
+    'access callback' => TRUE,
+  );
+
+  $items['recipe/%'] = array(
+    'title' => 'Recipe details',
+    'page arguments' => array(1),
+    'page callback' => '_recipe_submit_page',
+    'access arguments' => array('recipe_manage'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function recipe_submit_form($form, &$form_state) {
+
+  $form['recipe_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Recipe title'),
+    '#required' => TRUE,
+  );
+
+  $form['author_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Author name'),
+  );
+
+  $form['author_email'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Author email'),
+    '#required' => TRUE,
+  );
+
+  $form['recipe_description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Recipe description'),
+    '#maxlength' => 500,
+    '#required' => TRUE,
+  );
+
+  $form['recipe_instructions'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Recipe instructions'),
+    '#required' => TRUE,
+  );
+
+  $form['recipe_ingredients'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Recipe ingredients'),
+    '#required' => TRUE,
+  );
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit recipe'),
+  );
+
+  return $form;
+}
+
+function recipe_submit_form_validate($form, &$form_state) {
+  if (!filter_var($form_state['values']['author_email'], FILTER_VALIDATE_EMAIL)) {
+    form_set_error('author_email',t('You have to enter a valid email address'));
+    $form_state['redirect'] = FALSE;
+  }
+
+}
+
+function recipe_submit_form_submit($form, &$form_state) {
+  global $language;
+  db_insert('recipe_submit')
+    ->fields(array(
+      'submitted' => time(),
+      'site_language' => $language->language,
+      'recipe_title' => $form_state['values']['recipe_title'] ,
+      'author_name' => $form_state['values']['author_name'],
+      'author_email' => $form_state['values']['author_email'],
+      'recipe_description' => $form_state['values']['recipe_description'],
+      'recipe_instructions' => $form_state['values']['recipe_instructions'],
+      'recipe_ingredients' => $form_state['values']['recipe_ingredients'],
+      ))
+    ->execute();
+  drupal_set_message(t('The recipe was sucessfully submitted.'));
+  $form_state['redirect'] = '/';
+}
+
+/**
+ * Implements hook_permission().
+ */
+function recipe_submit_permission() {
+  return array(
+    'add_recipe' => array(
+      'title' => t('Permission to add a recipe'),
+    ),
+    'recipe_manage' => array(
+      'title' => t('Permission to manage recipes'),
+    ),
+  );
+}
+
+function _recipe_submit_page($recipe_id = 'all') {
+  if (isset($recipe_id) && !is_numeric($recipe_id)) {
+    drupal_set_message('hhasdjhnfasjkf', 'error');
+    drupal_access_denied();
+    return;
+  }
+  $output = array();
+  $query = db_select('recipe_submit', 'r')
+    ->fields('r')
+    ->condition('recipe_id', $recipe_id)
+    ->execute();
+  $result = $query->fetchAll();
+
+  foreach ($result as $values) {
+    foreach ($values as $field_name => $value) {
+      $output[$field_name] = $value;
+    }
+  }
+
+  return theme('recipe_submit', array('results' => $output));
+}
+
+function recipe_submit_theme() {
+  return array(
+    'recipe_submit' => array(
+      'template' => 'recipe_submit',
+      'variables' => array(
+        'results' => NULL,
+      ),
+    ),
+  );
+}
+
+
