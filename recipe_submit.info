@@ -1,5 +1,4 @@
 name = Recipe submit
 description = Form to add a recipe
 core = 7.x
-dependencies[] = rules:rules
 package = Custom
