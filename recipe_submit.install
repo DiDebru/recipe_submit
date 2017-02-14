@@ -1,13 +1,18 @@
 <?php
 
 /**
+ * @file
+ * The install file for recipe_submit.
+ */
+
+/**
  * Implements hook_schema().
  */
 function recipe_submit_schema() {
   $schema['recipe_submit'] = array(
     'description' => 'Recipe base table.',
     'fields' => array(
-      'recipe_id' => array(
+      'reid' => array(
         'description' => 'Primary identifier for recipe.',
         'type' => 'serial',
         'unsigned' => TRUE,
@@ -17,7 +22,7 @@ function recipe_submit_schema() {
         'description' => 'The Unix timestamp when the recipe was submitted.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0
+        'default' => 0,
       ),
       'site_language' => array(
         'description' => 'The sites language',
@@ -29,6 +34,7 @@ function recipe_submit_schema() {
         'type' => 'varchar',
         'length' => 255,
         'default' => '',
+        'not null' => TRUE,
       ),
       'author_name' => array(
         'description' => 'The author of the recipe.',
@@ -55,12 +61,18 @@ function recipe_submit_schema() {
         'type' => 'text',
       ),
     ),
-    'primary key' => array('recipe_id'),
+    'unique keys' => array(
+      'recipe_title' => array('recipe_title'),
+    ),
+    'primary key' => array('reid'),
   );
 
   return $schema;
 }
 
+/**
+ * Implements hook_uninstall().
+ */
 function recipe_submit_uninstall() {
   drupal_uninstall_schema('recipe_submit');
 }

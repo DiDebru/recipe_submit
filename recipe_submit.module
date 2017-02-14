@@ -1,7 +1,12 @@
 <?php
 
 /**
- *
+ * @file
+ * The recipe_submit module file.
+ */
+
+/**
+ * Implements hook_menu().
  */
 function recipe_submit_menu() {
   $items = array();
@@ -27,6 +32,9 @@ function recipe_submit_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_form().
+ */
 function recipe_submit_form($form, &$form_state) {
 
   $form['recipe_title'] = array(
@@ -73,16 +81,24 @@ function recipe_submit_form($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Implements hook_form_validate().
+ */
 function recipe_submit_form_validate($form, &$form_state) {
   if (!filter_var($form_state['values']['author_email'], FILTER_VALIDATE_EMAIL)) {
-    form_set_error('author_email',t('You have to enter a valid email address'));
+    form_set_error('author_email', t('You have to enter a valid email address'));
     $form_state['redirect'] = FALSE;
   }
 
 }
 
+/**
+ * Implements hook_form_submit().
+ */
 function recipe_submit_form_submit($form, &$form_state) {
   global $language;
+  global $user;
+  global $base_url;
   db_insert('recipe_submit')
     ->fields(array(
       'submitted' => time(),
@@ -93,9 +109,19 @@ function recipe_submit_form_submit($form, &$form_state) {
       'recipe_description' => $form_state['values']['recipe_description'],
       'recipe_instructions' => $form_state['values']['recipe_instructions'],
       'recipe_ingredients' => $form_state['values']['recipe_ingredients'],
-      ))
+    ))
     ->execute();
+  $query = db_select('recipe_submit', 'r')
+    ->fields('r', array('reid'))
+    ->condition('recipe_title', $form_state['values']['recipe_title'])
+    ->execute();
+  $reid = $query->fetchAll();
+  foreach ($reid as $id) {
+    $params['link'] = $base_url . '/recipe/' . $id->reid;
+  }
+  $params['subject'] = 'New recipe';
   drupal_set_message(t('The recipe was sucessfully submitted.'));
+  drupal_mail('recipe_submit', 'new_recipe', variable_get('site_mail', ini_get('sendmail_from')), user_preferred_language($user), $params, TRUE);
   $form_state['redirect'] = '/';
 }
 
@@ -113,6 +139,12 @@ function recipe_submit_permission() {
   );
 }
 
+/**
+ * Page callback function to get stored recipe.
+ *
+ * @param string $recipe_id
+ *   The page argument after /recipe/.
+ */
 function _recipe_submit_page($recipe_id = 'all') {
   if (isset($recipe_id) && !is_numeric($recipe_id)) {
     drupal_set_message('hhasdjhnfasjkf', 'error');
@@ -122,7 +154,7 @@ function _recipe_submit_page($recipe_id = 'all') {
   $output = array();
   $query = db_select('recipe_submit', 'r')
     ->fields('r')
-    ->condition('recipe_id', $recipe_id)
+    ->condition('reid', $recipe_id)
     ->execute();
   $result = $query->fetchAll();
 
@@ -135,6 +167,9 @@ function _recipe_submit_page($recipe_id = 'all') {
   return theme('recipe_submit', array('results' => $output));
 }
 
+/**
+ * Implements hook_theme().
+ */
 function recipe_submit_theme() {
   return array(
     'recipe_submit' => array(
@@ -145,5 +180,3 @@ function recipe_submit_theme() {
     ),
   );
 }
-
-
